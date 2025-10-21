@@ -229,6 +229,8 @@ deinit_logger :: () {
 
     file_close(*logger_data.log_file);
     file_close(*logger_data.log_error_file);
+
+    logger_data.initted = false;
 }
 
 session_notify_modified_buffer :: (buffer_id: s64) {
@@ -433,10 +435,25 @@ dump_buffer_state :: (buffer_id: s64) -> [] u8 {
 
 session_logger :: (raw_msg: string, data: *void, info: Log_Info) {
     d := cast(*Session_Logger_Data) data;
-    file := ifx (info.common_flags & .ERROR) != 0 then *d.log_error_file else *d.log_file;
 
     calendar_time := to_calendar(current_time_consensus_backwards_compatible(), .LOCAL);
     message := tprint("%: %", calendar_to_string(calendar_time), raw_msg);
+
+    // Some plugins, such as Iprof, will log after our session logger files have been closed.
+    // In this case we can just print it to the console.
+    if !d.initted {
+        to_standard_error := (info.common_flags & .ERROR) != 0;
+
+        if message[message.count - 1] != #char "\n" {
+            write_strings(message, "\n", to_standard_error = to_standard_error);
+        } else {
+            write_string(message, to_standard_error = to_standard_error);
+        }
+
+        return;
+    }
+
+    file := ifx (info.common_flags & .ERROR) != 0 then *d.log_error_file else *d.log_file;
 
     lock(*logger_mutex);
     file_write(file, message);
