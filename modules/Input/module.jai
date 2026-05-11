@@ -151,19 +151,17 @@ Key_Code :: enum u32 {
 // it back for now...
 
 Event :: struct {
-    Modifier_Flags :: union {
+    Modifier_Flags :: struct {
         // Eventually we'd like the *_pressed modifiers to be 1 bit each,
         // but still be nameable as booleans. But for now they're 1 byte each.
         // You can compare them as a u32 using the 'packed' member.
 
-        struct {
-            // @@ This is confusing. Below key_pressed means the key was just pressed, here _pressed means the key is held down.
-            shift_pressed    := false;
-            ctrl_pressed     := false;
-            alt_pressed      := false;
-            cmd_meta_pressed := false; // Cmd on macOS, Meta on Linux
-        }
-        packed: u32 = 0;
+        shift_pressed    := false;
+        ctrl_pressed     := false;
+        alt_pressed      := false;
+        cmd_meta_pressed := false; // Cmd on macOS, Meta on Linux
+
+        #overlay(shift_pressed) packed: u32;
     }
 
     type: Event_Type = Event_Type.UNINITIALIZED;
