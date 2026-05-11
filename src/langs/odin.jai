@@ -883,7 +883,7 @@ Keyword_Token :: struct {
 KEYWORD_MAP :: #run -> Table(string, Keyword_Token) {
     table: Table(string, Keyword_Token);
     size := 10 * (KEYWORDS.count + TYPE_KEYWORDS.count + VALUE_KEYWORDS.count);
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;
@@ -899,7 +899,7 @@ KEYWORD_MAP :: #run -> Table(string, Keyword_Token) {
 ATTRIBUTES_MAP :: #run -> Table(string, Attribute) {
     table: Table(string, Attribute);
     size := 10 * ATTRIBUTES.count;
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;
@@ -914,7 +914,7 @@ ATTRIBUTES_MAP :: #run -> Table(string, Attribute) {
 DIRECTIVES_MAP :: #run -> Table(string, Directive) {
     table: Table(string, Directive);
     size := 10 * DIRECTIVES.count;
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;

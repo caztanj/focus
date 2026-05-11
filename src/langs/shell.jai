@@ -1008,7 +1008,7 @@ Keyword_Token :: struct {
 KEYWORD_MAP :: #run -> Table(string, Keyword_Token) {
     table: Table(string, Keyword_Token);
     size := 10 * (KEYWORDS.count + VALUE_KEYWORDS.count);
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;

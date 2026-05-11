@@ -343,7 +343,7 @@ Special_Variable_Token :: struct {
 KEYWORD_MAP :: #run -> Table(string, Keyword_Token) {
     table: Table(string, Keyword_Token);
     size := 2 * KEYWORDS.count;
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;
@@ -357,7 +357,7 @@ KEYWORD_MAP :: #run -> Table(string, Keyword_Token) {
 SPECIAL_VARIABLES_MAP :: #run -> Table(string, Special_Variable_Token) {
     table: Table(string, Special_Variable_Token);
     size := 2 * (KEYWORDS.count + SPECIAL_VARIABLES.count);
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;
@@ -370,7 +370,7 @@ SPECIAL_VARIABLES_MAP :: #run -> Table(string, Special_Variable_Token) {
 
 OPERATOR_MAP :: #run -> Table(string, Operation) {
     table: Table(string, Operation);
-    init(*table, 2 * OPERATIONS.count);
+    table_resize(*table, 2 * OPERATIONS.count);
     #insert -> string {
         b: String_Builder;
         init_string_builder(*b);

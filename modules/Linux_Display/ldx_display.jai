@@ -153,7 +153,6 @@ Inspect available locales [$ locale -a] and the one you have set up: [$ locale]
             XcursorLibraryLoadCursor = xx dlsym(lib, "XcursorLibraryLoadCursor");
             xcursor_initialized = (XcursorLibraryLoadCursor != null);
             if xcursor_initialized {
-                init(*x11_display.x_cursors);
                 for preloaded_x_cursors {
                     table_add(*x11_display.x_cursors, it, XcursorLibraryLoadCursor(x11_display.handle, it.data));
                 }

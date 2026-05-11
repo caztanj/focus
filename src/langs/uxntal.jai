@@ -118,7 +118,7 @@ Token :: struct {
 OPCODE_MAP :: #run -> Table(string, Opcode) {
     table: Table(string, Opcode);
     size := 10 * OPCODES.count;
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;

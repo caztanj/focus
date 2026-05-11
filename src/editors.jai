@@ -2259,7 +2259,7 @@ deinit_editors :: () {
 init_buffers :: () {
     // 3000 * 70% = 2100 is a reasonable number of text files in a workspace, which
     // most codebases will hopefully not exceed (so that we don't have to grow the hash table)
-    init(*buffers_table, slots_to_allocate = 3000);
+    table_resize(*buffers_table, 3000);
     init(*open_buffers_lock);
 
     global_config_buffer_id = -1;

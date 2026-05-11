@@ -157,7 +157,6 @@ xcb_init_display :: (display: *Display) -> bool {
     tis := cast(*Type_Info_Struct) type_of(xd.global_atoms);
     assert(tis.type == .STRUCT);
 
-    init(*xd.atom_names);
     info: [..] struct {
         cookie: xcb_intern_atom_cookie_t;
         atom: *xcb_atom_t;
@@ -205,9 +204,6 @@ xcb_init_display :: (display: *Display) -> bool {
 
     xd.clipboard_incoming_data = copy_string("");
     xd.clipboard_outgoing_data = copy_string("");
-
-    init(*xd.devices);
-    init(*xd.cursors);
 
     if !ld_xkb_state_init(*xd, xd.handle) return false;
     if !load_cursors(*xd) return false;
