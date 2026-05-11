@@ -325,7 +325,7 @@ TAGS :: string.[
 TAG_MAP :: #run -> Table(string, Token_Type) {
     table: Table(string, Token_Type);
     size := 10 * TAGS.count;
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;

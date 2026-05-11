@@ -95,7 +95,9 @@ initialize_queue :: ($User_Data: Type) -> *Queue(User_Data), result := Error.{} 
         td.name = sprint("Worker thread % for queue %\0", it_index, queue);
 
         ts := *td.ts;
-        set_initial_data(ts, TEMPORARY_STORAGE_SIZE, td.ts_data.data);
+
+        ts.data = td.ts_data.data;
+        ts.size = td.ts_data.count;
 
         td.thread_context = context;
         td.thread_context.temporary_storage = ts;

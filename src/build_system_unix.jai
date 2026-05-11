@@ -201,7 +201,8 @@ create_process_with_single_output_pipe :: (process: *Process, args: .. string, w
         context.allocator.data = Default_Allocator.allocator_proc(.STARTUP, 0, 0, null, null);
         temporary_storage_data: [1024] u8 #align 64; // Some temporary storage on the stack, for set_working_directory and error messages.
         temp: Temporary_Storage;
-        set_initial_data(*temp, temporary_storage_data.count, temporary_storage_data.data);
+        temp.data = temporary_storage_data.data;
+        temp.size = temporary_storage_data.count;
         context.temporary_storage = *temp;
 
         report_and_exit :: (message: string) #expand {

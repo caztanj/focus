@@ -129,7 +129,6 @@ wl_init_display :: (display: *Display) -> bool {
     init_string_builder(*d.current_text_selection);
 
     cursor_theme_name := getenv("XCURSOR_THEME");
-    init(*d.cursors);
     d.cursor_theme = wl_cursor_theme_load(cursor_theme_name, 24, d.shm);
     for 0..d.cursor_theme.cursor_count - 1 {
         native := d.cursor_theme.cursors[it];

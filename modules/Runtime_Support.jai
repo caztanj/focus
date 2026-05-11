@@ -403,7 +403,10 @@ __panic_due_to_runtime_call_of_compile_time_procedure :: (line_number: s64, file
         initializer_of(#Context)(*first_thread_context);
 
         ts := *first_thread_temporary_storage;
-        set_initial_data(ts, TEMPORARY_STORAGE_SIZE, first_thread_temporary_storage_data.data);
+
+        ts.data = first_thread_temporary_storage_data.data;
+        ts.size = first_thread_temporary_storage_data.count;
+
         first_thread_context.temporary_storage = ts;
 
         return *first_thread_context;
@@ -549,30 +552,12 @@ Context_Base :: struct {
 Temporary_Storage :: struct {  // @Volatile: Must match general.h
     data:     *u8;
     size:     s64;
-    current_page_bytes_occupied: s64;
+
     total_bytes_occupied: s64;
     high_water_mark: s64;
     last_set_mark_location: Source_Code_Location;
 
-    overflow_allocator : Allocator;
-
-    overflow_pages: *Overflow_Page;
-    original_data: *u8;  // Data to restore after clearing overflow pages. @Simplify: Maybe could be an Overflow_Page, but maybe we want to be able to assert on overflow_pages==null to ensure performance.
-    original_size: s64;
-
-    Overflow_Page :: struct {
-        next: *Overflow_Page;
-        allocator: Allocator;
-        size: s64;
-    }
-}
-
-set_initial_data :: (ts: *Temporary_Storage, count: s64, data: *u8) #no_context {
-    ts.data = data;
-    ts.size = count;
-
-    ts.original_data = data;
-    ts.original_size = count;
+    implementation_data: [256] u8;
 }
 
 #scope_module

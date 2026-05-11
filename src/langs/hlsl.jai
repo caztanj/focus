@@ -597,7 +597,7 @@ Keyword_Token :: struct {
 KEYWORD_MAP :: #run,stallable -> Table(string, Keyword_Token) {
     table: Table(string, Keyword_Token);
     size := 10 * (KEYWORDS.count + TYPE_KEYWORDS.count + VALUE_KEYWORDS.count);
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;
@@ -613,7 +613,7 @@ KEYWORD_MAP :: #run,stallable -> Table(string, Keyword_Token) {
 
 SEMANTICS_MAP :: #run -> Table(string, Semantic) {
     table: Table(string, Semantic);
-    init(*table, 10 * SYSTEM_VALUE_SEMANTICS.count);
+    table_resize(*table, 10 * SYSTEM_VALUE_SEMANTICS.count);
 
     #insert -> string {
         b: String_Builder;
@@ -627,7 +627,7 @@ SEMANTICS_MAP :: #run -> Table(string, Semantic) {
 DIRECTIVES_MAP :: #run -> Table(string, Directive) {
     table: Table(string, Directive);
     size := 2 * PREPROCESSOR_DIRECTIVES.count;
-    init(*table, size);
+    table_resize(*table, size);
 
     #insert -> string {
         b: String_Builder;

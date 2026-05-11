@@ -43,7 +43,7 @@ init_display :: (display: *Display, desired_backend := BACKEND_CHOICE.PREFER_BES
 
     if display.base.type != Base_Display return true;
 
-    display.* = .{};
+    zero(display);
 
     bd: *Base_Display = display;
     if bd.app_id free(bd.app_id);
@@ -55,7 +55,7 @@ init_display :: (display: *Display, desired_backend := BACKEND_CHOICE.PREFER_BES
     X11_init :: inline (display: *Display) -> bool {
         base := display.base;
         if !xcb_init_display(display) {
-            display.* = .{};
+            zero(display);
             display.base = base;
             return x11_init_display(display);
         }
@@ -65,7 +65,7 @@ init_display :: (display: *Display, desired_backend := BACKEND_CHOICE.PREFER_BES
     WL_init :: inline (display: *Display) -> bool {
         base := display.base;
         if !wl_init_display(display) {
-            display.* = .{};
+            zero(display);
             display.base = base;
             return false;
         }
@@ -87,14 +87,14 @@ init_display :: (display: *Display, desired_backend := BACKEND_CHOICE.PREFER_BES
                 wld := *display.wld;
                 if !wld.decoration_manager {
                     wl_uninit_display(display);
-                    display.* = .{};
+                    zero(display);
                     display.base = base;
                     return X11_init(display);
                 }
                 return true;
             }
 
-            display.* = .{};
+            zero(display);
             display.base = base;
             return X11_init(display);
         }
@@ -137,7 +137,7 @@ create_window :: inline (display: *Display, width: int, height: int, window_name
 {
     bd: *Base_Display = display;
     ret := array_add(*bd.windows);
-    ret.* = .{};
+    zero(ret);
     if !bd.create_window(display, ret, width, height, window_name, window_x, window_y, parent, background_color_rgb) {
         pop(*bd.windows);
         return INVALID_WINDOW;
@@ -318,6 +318,16 @@ dump_debug_info :: (display: *Display, sb: *String_Builder) {
         case X11_Display;     print_to_builder(sb, "%.%\n", display.base.type, display.x11);
         case XCB_Display;     print_to_builder(sb, "%.%\n", display.base.type, display.xcb);
         case;                 print_to_builder(sb, "%.%\n", display.base.type, display.base);
+    }
+}
+
+zero :: (item: *$T) {
+    ini :: initializer_of(T);
+
+    #if ini {
+        ini(item);
+    } else {
+        memset(item, 0, size_of(T));
     }
 }
 

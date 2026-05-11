@@ -251,7 +251,6 @@ Focus_Timer :: struct {
 create_timer :: (timeout_ms: u64, repeat := true) -> *Focus_Timer {
     if !timer_class_registered {
         timer_class_registered = true;
-        init(*native_timers);
 
         cls := objc_create_class(Focus_Timer, NSObject);
         objc_add_instance_method(cls, Focus_Timer.timerFired, "timerFired:");

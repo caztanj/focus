@@ -12,8 +12,8 @@ execute_deferred_actions :: () {
 
 defer_action_switch_to_project :: (path: string) {
     clear_action_queue();
-    push_action(.reload_workspace, .{ reload_workspace = .{ automatic = false } });
-    push_action(.load_project_config, .{ load_project_config = .{ path = copy_string(path) } });
+    push_action(.reload_workspace, .{ type = .reload_workspace, reload_workspace = .{ automatic = false } });
+    push_action(.load_project_config, .{ type = .load_project_config, load_project_config = .{ path = copy_string(path) } });
     push_action(.abort_workspace_scanning);
     push_action(.wait_for_killed_command_to_stop);
     push_action(.kill_running_command);
@@ -22,7 +22,7 @@ defer_action_switch_to_project :: (path: string) {
 
 defer_action_reload_workspace :: (automatic: bool) {
     clear_action_queue();
-    push_action(.reload_workspace, .{ reload_workspace = .{ automatic = automatic } });
+    push_action(.reload_workspace, .{ type = .reload_workspace, reload_workspace = .{ automatic = automatic } });
     push_action(.wait_for_killed_command_to_stop);
     push_action(.kill_running_command);
     defer_action_save_all_buffers();
@@ -30,7 +30,7 @@ defer_action_reload_workspace :: (automatic: bool) {
 
 defer_action_close_project :: () {
     clear_action_queue();
-    push_action(.reload_workspace, .{ reload_workspace = .{ automatic = false } });
+    push_action(.reload_workspace, .{ type = .reload_workspace, reload_workspace = .{ automatic = false } });
     push_action(.close_project);
     push_action(.abort_workspace_scanning);
     push_action(.wait_for_killed_command_to_stop);
@@ -40,7 +40,7 @@ defer_action_close_project :: () {
 
 defer_action_refresh_config_or_theme :: (path: string) {
     clear_action_queue();
-    push_action(.refresh_config_or_theme, .{ refresh_config_or_theme = .{ path = copy_string(path) } });
+    push_action(.refresh_config_or_theme, .{ type = .refresh_config_or_theme, refresh_config_or_theme = .{ path = copy_string(path) } });
     push_action(.wait_for_workspace_scanning_to_finish);
 }
 
@@ -54,45 +54,45 @@ defer_action_quit :: () {
 
 defer_action_build_command :: (command_id: s64) {
     clear_action_queue();
-    push_action(.build_command, .{ build_command = .{ command_id = command_id } });
+    push_action(.build_command, .{ type = .build_command, build_command = .{ command_id = command_id } });
     push_action(.wait_for_killed_command_to_stop);
     push_action(.kill_running_command);
     push_action(.wait_for_workspace_scanning_to_finish);
 }
 
 defer_action_save_as :: (buffer_id: s64) {
-    push_action(.save_as, .{ save_as = .{ buffer_id = buffer_id } });
+    push_action(.save_as, .{ type = .save_as, save_as = .{ buffer_id = buffer_id } });
 }
 
 defer_action_overwrite_buffer :: (buffer_id: s64) {
     clear_action_queue();
     buffer := *open_buffers[buffer_id];
     assert(buffer.has_file && buffer.file.full_path != "");
-    push_action(.confirm_overwrite, .{ confirm_overwrite = .{ buffer_id = buffer_id, is_move = false, file_path = copy_string(buffer.file.full_path) } });
+    push_action(.confirm_overwrite, .{ type = .confirm_overwrite, confirm_overwrite = .{ buffer_id = buffer_id, is_move = false, file_path = copy_string(buffer.file.full_path) } });
 }
 
 defer_action_move :: (buffer_id: s64) {
-    push_action(.save_as, .{ save_as = .{ buffer_id = buffer_id, is_move = true } });
+    push_action(.save_as, .{ type = .save_as, save_as = .{ buffer_id = buffer_id, is_move = true } });
 }
 
 defer_action_delete :: (buffer_id: s64) {
-    push_action(.delete, .{ delete = .{ buffer_id = buffer_id } });
+    push_action(.delete, .{ type = .delete, delete = .{ buffer_id = buffer_id } });
 }
 
 defer_action_close_pane :: (pane: *Editor_Pane) {
     if !pane return;
-    push_action(.close_pane, .{ close_pane = .{ pane = pane } });
+    push_action(.close_pane, .{ type = .close_pane, close_pane = .{ pane = pane } });
 }
 
 defer_action_close_editor :: (editor_id: s64) {
-    push_action(.close_editor, .{ close_editor = .{ editor_id = editor_id } });
+    push_action(.close_editor, .{ type = .close_editor, close_editor = .{ editor_id = editor_id } });
     editor, buffer := get_editor_and_buffer(editor_id);
     if is_unsaved(buffer) && num_editors_for_buffer_in_the_tree(editor.buffer_id) <= 1 then defer_action_save_buffers(.[editor.buffer_id]);
 }
 
 defer_action_close_editors_for_pane :: (pane: *Editor_Pane, except: s64 = -1, notify := false) {
     if !pane return;
-    push_action(.close_editors_for_pane, .{ close_editors_for_pane = .{ pane = pane, except = except, notify = notify } });
+    push_action(.close_editors_for_pane, .{ type = .close_editors_for_pane, close_editors_for_pane = .{ pane = pane, except = except, notify = notify } });
 }
 
 defer_action_close_all_editors :: () {
@@ -105,11 +105,11 @@ defer_action_close_other_panes :: () {
 
 defer_action_save_all_buffers :: () {
     unsaved_buffer_ids := get_unsaved_buffer_ids();
-    push_action(.save_buffers, .{ save_buffers = .{ buffer_ids = array_copy(unsaved_buffer_ids) } });
+    push_action(.save_buffers, .{ type = .save_buffers, save_buffers = .{ buffer_ids = array_copy(unsaved_buffer_ids) } });
 }
 
 defer_action_save_buffers :: (buffer_ids: [] s64) {
-    push_action(.save_buffers, .{ save_buffers = .{ buffer_ids = array_copy(buffer_ids) } });
+    push_action(.save_buffers, .{ type = .save_buffers, save_buffers = .{ buffer_ids = array_copy(buffer_ids) } });
 }
 
 
@@ -204,18 +204,32 @@ Deferred_Action :: struct {
     kind: Kind;
     using details: Details;
 
-    Details :: union {
-        save_as:                    struct { buffer_id: s64; is_move: bool; }
-        save_buffers:               struct { buffer_ids: [] s64; }
-        confirm_overwrite:          struct { buffer_id: s64; is_move: bool; file_path: string; }
-        delete:                     struct { buffer_id: s64; }
-        load_project_config:        struct { path: string; }
-        reload_workspace:           struct { automatic: bool; }
-        refresh_config_or_theme:    struct { path: string; }
-        build_command:              struct { command_id: s64; }
-        close_editor:               struct { editor_id: s64; }
-        close_editors_for_pane:     struct { pane: *Editor_Pane; except: s64; notify: bool; }
-        close_pane:                 struct { pane: *Editor_Pane; }
+    Details_Type :: enum {
+        save_as;
+        save_buffers;
+        confirm_overwrite;
+        delete;
+        load_project_config;
+        reload_workspace;
+        refresh_config_or_theme;
+        build_command;
+        close_editor;
+        close_editors_for_pane;
+        close_pane;
+    }
+
+    Details :: union type: Details_Type {
+        .save_as                ,, save_as:                 struct { buffer_id: s64; is_move: bool; }
+        .save_buffers           ,, save_buffers:            struct { buffer_ids: [] s64; }
+        .confirm_overwrite      ,, confirm_overwrite:       struct { buffer_id: s64; is_move: bool; file_path: string; }
+        .delete                 ,, delete:                  struct { buffer_id: s64; }
+        .load_project_config    ,, load_project_config:     struct { path: string; }
+        .reload_workspace       ,, reload_workspace:        struct { automatic: bool; }
+        .refresh_config_or_theme,, refresh_config_or_theme: struct { path: string; }
+        .build_command          ,, build_command:           struct { command_id: s64; }
+        .close_editor           ,, close_editor:            struct { editor_id: s64; }
+        .close_editors_for_pane ,, close_editors_for_pane:  struct { pane: *Editor_Pane; except: s64; notify: bool; }
+        .close_pane             ,, close_pane:              struct { pane: *Editor_Pane; }
     }
 
     Kind :: enum {
@@ -295,7 +309,7 @@ execute_save_as :: (action: Deferred_Action) -> Action_Result {
     _save_to_file_path :: (buffer: *Buffer, buffer_id: s64, file_path: string, is_move: bool) -> Action_Result {
         if file_exists(file_path) {
             remove_top_action();
-            push_action(.confirm_overwrite, .{ confirm_overwrite = .{ buffer_id = buffer_id, is_move = is_move, file_path = copy_string(file_path) } });
+            push_action(.confirm_overwrite, .{ type = .confirm_overwrite, confirm_overwrite = .{ buffer_id = buffer_id, is_move = is_move, file_path = copy_string(file_path) } });
             return .NEXT;
         } else {
             found, directory, file := split_from_right(file_path, #char "/");
