@@ -520,12 +520,21 @@ table_set_threadsafe :: (table: *Threadsafe_Table, key: string, value: bool) -> 
     lock(*table.lock);
     defer unlock(*table.lock);
 
+    value_ptr := table_find_pointer(*table.table, key);
+    if value_ptr {
+        value_ptr.* = value;
+        return value_ptr;
+    }
+
     return table_set(*table.table, copy_string(key,, focus_allocator), value);
 }
 
 table_reset_threadsafe :: (table: *Threadsafe_Table) {
     lock(*table.lock);
     defer unlock(*table.lock);
+
+    push_allocator(focus_allocator);
+    for table.table  free(it_index);
 
     table_reset_keeping_memory(*table.table);
 }

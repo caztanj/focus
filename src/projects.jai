@@ -77,7 +77,7 @@ update_cached_projects :: (projects: [] string) {
 
     for projects {
         if !file_exists(it) {
-            log_error("Project file '%' doesn't exist, so it's been removed from most recent projects.");
+            log_error("Project file '%' doesn't exist, so it's been removed from most recent projects.", it);
             continue;
         }
         array_add(*cached_projects, copy_string(it));
