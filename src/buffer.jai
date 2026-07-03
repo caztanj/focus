@@ -1206,7 +1206,7 @@ create_an_empty_buffer :: () -> buffer_id: s64, created: bool {
     buffer.indentation.size = 0;
 
     rescan_for_lines(buffer);
-    retokenize(buffer);
+    buffer.needs_tokenizing = true;
 
     return buffer_id, true;
 }
@@ -1266,7 +1266,7 @@ find_or_create_buffer :: (path: string) -> buffer_id: s64, created: bool {
     buffer.meow_hash = calculate_hash(to_view(buffer.bytes));
 
     rescan_for_lines(buffer);
-    retokenize(buffer);
+    buffer.needs_tokenizing = true;
 
     recalculate_settings(buffer);
 

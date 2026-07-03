@@ -138,12 +138,18 @@ should_ignore_file :: (file_path: string, check_for_zeroes_if_needed := true) ->
     if explicitly_allowed return false;
 
     // If we haven't decided yet whether to ignore or allow, do some extra checks
-    extension, found_extension := get_extension(path);
+    extension, found_extension := get_extension(path, greedy = false);
     if found_extension {
         known, file_type := is_known_file_extension(extension);
         if known {
-            if file_type == .text   return false;
-            if file_type == .binary return true;
+            if file_type == .text {
+                table_set_threadsafe(*ignore_table, path, false);
+                return false;
+            }
+            if file_type == .binary {
+                table_set_threadsafe(*ignore_table, path, true);
+                return true;
+            }
         }
     }
 
