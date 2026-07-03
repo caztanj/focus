@@ -158,13 +158,13 @@ open_file_dialog_open_entry :: (selected: s64, placement: Editor_Placement, fold
             clear_path_chunks();
             entry_name := copy_string(entry.name);
             array_add(*path_chunks, entry_name);
-            root_dir = entry_name;
+            root_dir = copy_string(entry_name);
             refresh_entries();
 
         case .project_dir;
             clear_path_chunks();
             array_add(*path_chunks, copy_string(entry.name));
-            root_dir = entry.full_path;
+            root_dir = copy_string(entry.full_path);
             refresh_entries();
 
         case .folder;
@@ -301,7 +301,7 @@ set_path_chunks_from_file :: (file_path: string) {
 
     is_project_dir, project_dir := dir_is_within_project(parent_dir);
     if is_project_dir {
-        root_dir = copy_string(project_dir.path);  // leak
+        root_dir = copy_string(project_dir.path);
         array_add(*path_chunks, copy_string(project_dir.name));
     } else {
         #if OS != .WINDOWS then array_add(*path_chunks, copy_string("/"));
@@ -320,6 +320,10 @@ set_path_chunks_from_file :: (file_path: string) {
 clear_path_chunks :: () {
     for open_file_dialog.path_chunks free(it);
     array_reset(*open_file_dialog.path_chunks);
+    if open_file_dialog.root_dir {
+        free(open_file_dialog.root_dir);
+        open_file_dialog.root_dir = "";
+    }
 }
 
 refresh_entries :: (clear_input := true) {

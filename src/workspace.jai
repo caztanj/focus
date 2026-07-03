@@ -229,8 +229,11 @@ reload_workspace :: (automatic := false) {
 
     // Reinit things
     init_file_watcher();
+
+    for project_dirs free(it.path.data);
     array_reset_keeping_memory(*project_dirs);
     array_reset_keeping_memory(*unique_project_dirs);
+
     for project_files  free(it);
     array_reset_keeping_memory(*project_files);
     init_workspace();
