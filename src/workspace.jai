@@ -72,15 +72,16 @@ add_file_to_workspace :: (path: string) {
 
 add_directory_to_workspace :: (path: string, index := -1) {
     full_path, success := get_absolute_path(path,, temp);
-    full_path = copy_string(full_path);
-    path_overwrite_separators(full_path, #char "/");
 
-    if !is_directory(full_path) || !success {
+    if !success || !is_directory(full_path) {
         error_msg := tprint("Couldn't add % to workspace. Directory doesn't exist or is invalid.", path);
         add_user_error(error_msg, dismiss_in_seconds = 10);
         log_error(error_msg);
         return;
     }
+
+    full_path = copy_string(full_path);
+    path_overwrite_separators(full_path, #char "/");
 
     dir: Project_Dir;
     dir.path = trim_right(full_path, "/");
@@ -165,8 +166,7 @@ workspace_update :: () {
                     if count <= 0 break;
                     file_range.* = array_view(files_to_scan, start, count);
 
-                    logging_name := sprint("Scan [%:%]", start, start + count);
-                    this_allocation_is_not_a_leak(logging_name.data);  // this is actually a leak, but Thread_Group won't free it and we can't seem to be able to either
+                    logging_name := copy_string(tprint("Scan [%:%]", start, start + count),, allocator = get_scan_pool_allocator());
                     add_work(*scanner_thread_group, file_range, logging_name);
 
                     num_jobs_to_complete += 1;
@@ -379,8 +379,8 @@ file_list_threadproc :: (group: *Thread_Group, thread: *Thread, work: *void) -> 
         if file.is_symlink return;
         if should_ignore_file(file.full_name, check_for_zeroes_if_needed = false) return;
 
+        if table_find_pointer(*file_list_table, file.full_name) return;
         full_path := copy_string(file.full_name,, allocator=userdata);
-        if table_find_pointer(*file_list_table, full_path) return;
         array_add(*files_to_scan, full_path);
         table_add(*file_list_table, full_path, true);
     }
