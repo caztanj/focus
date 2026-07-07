@@ -2714,8 +2714,7 @@ restore_cursor_state :: (using editor: *Editor, cursor_state: [] Cursor) {
     editor.cursor_moved = true;
 }
 
-// @TODO: have another look at the code and at the very least avoid rescanning for each cursor.
-// Also, check potential corner cases.
+// Check potential corner cases.
 align_cursors :: (using editor: *Editor, buffer: *Buffer) {
     // Don't work if a cursor has a selection larger than one line
     for editor.cursors {
@@ -2746,8 +2745,11 @@ align_cursors :: (using editor: *Editor, buffer: *Buffer) {
 
     // Compute the values needed to align the cursors
     rightmost_col, largest_selection: s32;
+    cursor_coords: [..] Cursor_Coords;
+    cursor_coords.allocator = temp;
     for editor.cursors {
         coords := get_real_cursor_coords(buffer, it);
+        array_add(*cursor_coords, coords);
         rightmost_col     = max(rightmost_col, min(coords.pos.col, coords.sel.col));
         largest_selection = max(largest_selection, abs(it.pos - it.sel));
     }
@@ -2758,7 +2760,7 @@ align_cursors :: (using editor: *Editor, buffer: *Buffer) {
         it.sel += xx offset_delta;
         it.col_wanted = -1;
 
-        coords              := get_real_cursor_coords(buffer, it);
+        coords              := cursor_coords[it_index];
         selection_start_col := min(coords.pos.col, coords.sel.col);
         selection_size      := abs(it.pos - it.sel);
 
@@ -2775,17 +2777,16 @@ align_cursors :: (using editor: *Editor, buffer: *Buffer) {
         insert_string_at_offset(buffer, max(it.pos, it.sel), str_after);
         insert_string_at_offset(buffer, min(it.pos, it.sel), str_before);
 
-        // insert_string_at_offset() make the buffer dirty
-        // we rescan to clean it else we can't call get_real_cursor_coords for the next cursors
-        rescan_for_lines(buffer);
-        if line_wrap_is_active(editor) then rescan_for_wrapped_lines(editor, buffer);
-
         // Keep selections aligned
         if it.pos < it.sel swap(*it.pos, *it.sel); // Shouldn't be necessary since it's already reverted in the merge step
         it.pos += xx (str_before.count + str_after.count);
         it.sel = it.pos - largest_selection;
         offset_delta += str_before.count + str_after.count;
     }
+
+    // insert_string_at_offset() makes the buffer dirty, so we rescan once all cursors have been processed
+    rescan_for_lines(buffer);
+    if line_wrap_is_active(editor) then rescan_for_wrapped_lines(editor, buffer);
 
     editor.cursor_moved = true;
 }
