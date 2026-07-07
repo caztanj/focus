@@ -71,6 +71,13 @@ defer_action_overwrite_buffer :: (buffer_id: s64) {
     push_action(.confirm_overwrite, .{ type = .confirm_overwrite, confirm_overwrite = .{ buffer_id = buffer_id, is_move = false, file_path = copy_string(buffer.file.full_path) } });
 }
 
+defer_action_confirm_reload :: (buffer_id: s64) {
+    clear_action_queue();
+    buffer := *open_buffers[buffer_id];
+    assert(buffer.has_file && buffer.file.full_path != "");
+    push_action(.confirm_reload, .{ type = .confirm_reload, confirm_reload = .{ buffer_id = buffer_id, file_path = copy_string(buffer.file.full_path) } });
+}
+
 defer_action_move :: (buffer_id: s64) {
     push_action(.save_as, .{ type = .save_as, save_as = .{ buffer_id = buffer_id, is_move = true } });
 }
@@ -136,6 +143,7 @@ execute_top_action :: () -> Action_Result {
         case .save_buffers;                             return execute_save_buffers(action);
         case .delete;                                   return execute_delete(action);
         case .confirm_overwrite;                        return execute_confirm_overwrite(action);
+        case .confirm_reload;                           return execute_confirm_reload(action);
         case .kill_running_command;                     return execute_kill_running_command(action);
         case .load_project_config;                      return execute_load_project_config(action);
         case .close_project;                            return execute_close_project(action);
@@ -167,6 +175,10 @@ remove_top_action :: () {
 
         case .confirm_overwrite;
             using action.details.confirm_overwrite;
+            if file_path { free(file_path); file_path = ""; }
+
+        case .confirm_reload;
+            using action.details.confirm_reload;
             if file_path { free(file_path); file_path = ""; }
 
         case .save_buffers;
@@ -208,6 +220,7 @@ Deferred_Action :: struct {
         save_as;
         save_buffers;
         confirm_overwrite;
+        confirm_reload;
         delete;
         load_project_config;
         reload_workspace;
@@ -222,6 +235,7 @@ Deferred_Action :: struct {
         .save_as                ,, save_as:                 struct { buffer_id: s64; is_move: bool; }
         .save_buffers           ,, save_buffers:            struct { buffer_ids: [] s64; }
         .confirm_overwrite      ,, confirm_overwrite:       struct { buffer_id: s64; is_move: bool; file_path: string; }
+        .confirm_reload         ,, confirm_reload:          struct { buffer_id: s64; file_path: string; }
         .delete                 ,, delete:                  struct { buffer_id: s64; }
         .load_project_config    ,, load_project_config:     struct { path: string; }
         .reload_workspace       ,, reload_workspace:        struct { automatic: bool; }
@@ -238,6 +252,7 @@ Deferred_Action :: struct {
         save_buffers;
         delete;
         confirm_overwrite;
+        confirm_reload;
         kill_running_command;
         build_command;
         load_project_config;
@@ -421,6 +436,30 @@ execute_confirm_overwrite :: (action: Deferred_Action) -> Action_Result {
                     deleted := delete_buffer_from_disk(buffer);
                     if !deleted then add_user_error("Couldn't delete the original file '%'", buffer.file.full_path);
                 }
+            }
+            return .DONE;
+
+        case .PENDING;   return .WAIT;
+        case .CANCEL;    return .CANCEL;
+    }
+}
+
+execute_confirm_reload :: (action: Deferred_Action) -> Action_Result {
+    using action.details.confirm_reload;
+
+    result := dialog_get_result(*confirm_reload_dialog, action.id);
+    if #complete result == {
+        case .UNINITTED;
+            show_dialog(*confirm_reload_dialog, action.id, .{ buffer_id = buffer_id, path = file_path });
+            return .WAIT;
+
+        case .OK_TO_ALL; #through;
+        case .OK;        #through;
+        case .NO_TO_ALL;
+            buffer := *open_buffers[buffer_id];
+
+            if buffer.has_file && platform_path_equals(buffer.file.full_path, file_path) {
+                reload_from_disk(buffer_id, force = true, show_user_messages = true);
             }
             return .DONE;
 

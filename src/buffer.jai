@@ -1522,8 +1522,8 @@ reload_from_disk :: (buffer_id: s64, force := false, show_user_messages := false
 
     if buffer.modified && !force {
         // Mark conflict
-        // TODO: display a dialog prompting to reload
         buffer.modified_on_disk = true;
+        defer_action_confirm_reload(buffer_id);
     } else {
         buffer.modified_on_disk = false;
         remember_last_mod_info(buffer);

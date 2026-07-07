@@ -305,6 +305,7 @@ main :: () {
                 case .switch_to_project_dialog;     handled = switch_to_project_dialog_handle_event(event);
                 case .unsaved_buffers_dialog;       handled = dialog_handle_event(*unsaved_buffers_dialog, event);
                 case .confirm_overwrite_dialog;     handled = dialog_handle_event(*confirm_overwrite_dialog, event);
+                case .confirm_reload_dialog;        handled = dialog_handle_event(*confirm_reload_dialog, event);
                 case .commands_dialog;              handled = dialog_handle_event(*commands_dialog, event);
                 case .kill_running_command_dialog;  handled = dialog_handle_event(*kill_running_command_dialog, event);
                 case .theme_dialog;                 handled = theme_dialog_handle_event(event);
@@ -971,6 +972,7 @@ Active_Global_Widget :: enum {
     switch_to_project_dialog;
     unsaved_buffers_dialog;
     confirm_overwrite_dialog;
+    confirm_reload_dialog;
     kill_running_command_dialog;
     theme_dialog;
     language_dialog;
@@ -1055,6 +1057,7 @@ focus_allocator: Allocator;
 #load "widgets/commands.jai";
 #load "widgets/switch_to_project.jai";
 #load "widgets/confirm_overwrite.jai";
+#load "widgets/confirm_reload.jai";
 #load "widgets/kill_running_command.jai";
 #load "widgets/theme_dialog.jai";
 #load "widgets/language_dialog.jai";

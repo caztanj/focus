@@ -238,6 +238,7 @@ show_build_panel :: () {
 
         case .unsaved_buffers_dialog;   // do nothing, we still want to see them
         case .confirm_overwrite_dialog; // do nothing, we still want to see them
+        case .confirm_reload_dialog;    // do nothing, we still want to see them
 
         case .open_file_dialog;                 #through;
         case .delete_file_dialog;               #through;

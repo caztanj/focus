@@ -58,6 +58,7 @@ draw_frame :: () {
         case .switch_to_project_dialog;         draw_switch_to_project_dialog();
         case .unsaved_buffers_dialog;           draw_unsaved_buffers_dialog();
         case .confirm_overwrite_dialog;         draw_confirm_overwrite_dialog();
+        case .confirm_reload_dialog;            draw_confirm_reload_dialog();
         case .commands_dialog;                  draw_commands_dialog();
         case .theme_dialog;                     draw_theme_dialog();
         case .language_dialog;                  draw_language_dialog();
@@ -3198,6 +3199,27 @@ draw_confirm_overwrite_dialog :: () {
         get_ui_id_from_loc(),
         "Overwrite file?",
         "Please confirm that you want to overwrite the following file:",
+        draw_extra_file_info,
+        extra_height = font_ui_medium_line_height,
+    );
+}
+
+draw_confirm_reload_dialog :: () {
+    draw_extra_file_info :: (extra_rect: Rect, margin: float, padding: float) {
+        width := xx Simp.prepare_text(font_ui_bold, confirm_reload_dialog.path);
+        Simp.draw_prepared_text(
+            font_ui_bold,
+            xx (extra_rect.x + margin),
+            xx (extra_rect.y + (extra_rect.h + font_ui_bold.character_height) / 2 + 2 * dpi_scale),
+            color = xx Color.UI_WARNING,
+        );
+    }
+
+    draw_generic_confirm_dialog(
+        *confirm_reload_dialog,
+        get_ui_id_from_loc(),
+        "Reload file from disk?",
+        "File has been modified on disk by another program. Reload?",
         draw_extra_file_info,
         extra_height = font_ui_medium_line_height,
     );
